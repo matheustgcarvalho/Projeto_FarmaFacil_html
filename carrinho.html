@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FarmaFácil - Carrinho</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+       :root { --tech-purple: #2E1A47; --neon-mint: #69FFC2; --pure-white: #FFFFFF; --warning-red: #ff4757; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        body { background-color: var(--tech-purple); color: var(--pure-white); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        header { background-color: rgba(46, 26, 71, 0.95); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--neon-mint); flex-shrink: 0; gap: 20px; }
+        .user-name-display { font-size: 1.1rem; font-weight: 700; color: var(--neon-mint); }
+        .btn-exit-header { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s;}
+        .btn-exit-header:hover { color: var(--warning-red); }
+        .btn-back-shop { text-decoration: none; color: var(--neon-mint); display: flex; align-items: center; gap: 5px; font-weight: 700; border: 2px solid var(--neon-mint); padding: 8px 15px; border-radius: 30px; transition: all 0.3s;}
+        .btn-back-shop:hover { background-color: var(--neon-mint); color: var(--tech-purple); }
+
+        main { flex-grow: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; width: 100%; }
+        
+        /* HEADER DA LISTA DE ITENS */
+        .cart-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .page-title { font-size: 1.8rem; display: flex; align-items: center; gap: 10px; color: var(--neon-mint); margin: 0; }
+        
+        /* BOTÃO LIMPAR CARRINHO */
+        .btn-clear-cart { background: none; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); padding: 8px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; transition: all 0.3s; }
+        .btn-clear-cart:hover { border-color: var(--warning-red); color: var(--warning-red); background-color: rgba(255, 71, 87, 0.1); }
+
+        .cart-list-container { display: flex; flex-direction: column; gap: 15px; }
+        .cart-item { background-color: rgba(255,255,255,0.05); border-radius: 16px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(105, 255, 194, 0.2); }
+        
+        .cart-item-left { display: flex; align-items: center; gap: 15px; }
+        
+        /* ESTILO DA IMAGEM NO CARRINHO */
+        .cart-item-img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background-color: white; /* Fallback */
+        }
+
+        .item-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px;}
+        .item-price-unit { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+        .item-price-total { color: var(--neon-mint); font-weight: 700; font-size: 1rem; margin-top: 2px;}
+
+        /* CONTROLES DE QUANTIDADE (+ e -) */
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: rgba(0,0,0,0.2);
+            padding: 5px;
+            border-radius: 30px;
+        }
+        .btn-qty {
+            width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s;
+        }
+        .btn-decrease { background-color: transparent; border: 1px solid var(--warning-red); color: var(--warning-red); }
+        .btn-decrease:hover { background-color: var(--warning-red); color: white; }
+        
+        .qty-display { font-weight: 700; font-size: 1.1rem; min-width: 25px; text-align: center; }
+
+        .btn-increase { background-color: var(--neon-mint); color: var(--tech-purple); }
+        .btn-increase:hover { transform: scale(1.1); box-shadow: 0 0 8px var(--neon-mint); }
+
+
+        .empty-cart-message { text-align: center; padding: 50px; color: rgba(255,255,255,0.5); font-size: 1.2rem; }
+
+        footer { background-color: rgba(46, 26, 71, 0.98); padding: 20px 30px; border-top: 1px solid rgba(105, 255, 194, 0.3); flex-shrink: 0; }
+        .cart-total-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 1.4rem; }
+        .total-value { color: var(--neon-mint); font-size: 1.8rem; font-weight: 800; }
+        .btn-finish-order { width: 100%; background-color: var(--neon-mint); color: var(--tech-purple); padding: 15px; border-radius: 12px; font-weight: 800; border: none; font-size: 1.2rem; cursor: pointer; display: flex; justify-content: center; alignItems: center; gap: 10px;}
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="loja.html" class="btn-back-shop">
+            <span class="material-icons">arrow_back</span> Voltar à Loja
+        </a>
+        <div style="text-align: center;">
+             <span class="welcome-text">Carrinho de</span><br>
+             <span id="userNameDisplay" class="user-name-display">...</span>
+        </div>
+        <button id="btnExit" class="btn-exit-header">
+            <span class="material-icons">logout</span> Sair
+        </button>
+    </header>
+
+    <main>
+        <div class="cart-header-row">
+            <h1 class="page-title"><span class="material-icons" style="font-size: 2rem;">shopping_cart_checkout</span> Seu Carrinho</h1>
+            <button id="btnClearCart" class="btn-clear-cart">
+                <span class="material-icons">delete_sweep</span> Limpar Carrinho
+            </button>
+        </div>
+        
+        <div id="cartListContainer" class="cart-list-container">
+            </div>
+    </main>
+
+    <footer>
+        <div class="cart-total-summary">
+            <span>Total a pagar:</span>
+            <span id="totalValueDisplay" class="total-value">R$ 0,00</span>
+        </div>
+        <button class="btn-finish-order">
+            <span class="material-icons">credit_card</span> FINALIZAR PAGAMENTO
+        </button>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login Check
+            const nomeSalvo = sessionStorage.getItem('usuarioFarmaFacil');
+            if (!nomeSalvo) { window.location.href = 'login.html'; return; }
+            document.getElementById('userNameDisplay').textContent = nomeSalvo;
+            
+            document.getElementById('btnExit').addEventListener('click', function() {
+                sessionStorage.removeItem('usuarioFarmaFacil'); window.location.href = 'login.html';
+            });
+
+            // LER O CARRINHO BRUTO
+            let carrinhoBruto = JSON.parse(sessionStorage.getItem('carrinhoFarmaFacil')) || [];
+            
+            const cartListContainer = document.getElementById('cartListContainer');
+            const totalValueDisplay = document.getElementById('totalValueDisplay');
+            const btnClearCart = document.getElementById('btnClearCart');
+
+            // --- FUNÇÃO LIMPAR CARRINHO ---
+            btnClearCart.addEventListener('click', function() {
+                if(confirm("Tem certeza que deseja esvaziar todo o carrinho?")) {
+                    carrinhoBruto = [];
+                    salvarERenderizar();
+                }
+            });
+
+            function salvarERenderizar() {
+                sessionStorage.setItem('carrinhoFarmaFacil', JSON.stringify(carrinhoBruto));
+                renderizarCarrinho();
+            }
+
+            function agruparItens(arrayBruto) {
+                const agrupado = {};
+                arrayBruto.forEach(item => {
+                    if (agrupado[item.id]) {
+                        agrupado[item.id].quantidade += 1;
+                    } else {
+                        agrupado[item.id] = { ...item, quantidade: 1 };
+                    }
+                });
+                return Object.values(agrupado);
+            }
+
+            function renderizarCarrinho() {
+                cartListContainer.innerHTML = ''; 
+                let totalGeral = 0;
+
+                // --- LÓGICA DE VISIBILIDADE DO BOTÃO LIMPAR ---
+                if (carrinhoBruto.length === 0) {
+                    btnClearCart.style.display = 'none'; // ESCONDE SE VAZIO
+                    cartListContainer.innerHTML = '<div class="empty-cart-message"><span class="material-icons" style="font-size: 4rem; margin-bottom: 20px; display: block;">remove_shopping_cart</span>Seu carrinho está vazio.</div>';
+                    totalValueDisplay.textContent = 'R$ 0,00';
+                    return;
+                } else {
+                    btnClearCart.style.display = 'flex'; // MOSTRA SE TEM ITENS
+                }
+                // ----------------------------------------------
+
+                const itensAgrupados = agruparItens(carrinhoBruto);
+
+                itensAgrupados.forEach(produto => {
+                    const precoTotalItem = produto.preco * produto.quantidade;
+                    totalGeral += precoTotalItem;
+                    
+                    const itemElement = document.createElement('div');
+                    itemElement.classList.add('cart-item');
+                    
+                    // HTML COM IMAGEM E CONTROLES DE + E -
+                    itemElement.innerHTML = `
+                        <div class="cart-item-left">
+                            <img src="${produto.imagem}" class="cart-item-img" alt="${produto.nome}">
+                            
+                            <div>
+                                <div class="item-name">${produto.nome}</div>
+                                <div class="item-price-unit">Unit: R$ ${produto.preco.toFixed(2).replace('.',',')}</div>
+                                <div class="item-price-total">Total: R$ ${precoTotalItem.toFixed(2).replace('.',',')}</div>
+                            </div>
+                        </div>
+
+                        <div class="quantity-controls">
+                            <button class="btn-qty btn-decrease" data-id="${produto.id}" title="Diminuir">
+                                <span class="material-icons" style="font-size: 1.2rem;">remove</span>
+                            </button>
+                            
+                            <span class="qty-display">${produto.quantidade}</span>
+                            
+                            <button class="btn-qty btn-increase" data-id="${produto.id}" title="Aumentar">
+                                <span class="material-icons" style="font-size: 1.2rem;">add</span>
+                            </button>
+                        </div>
+                    `;
+                    cartListContainer.appendChild(itemElement);
+                });
+
+                totalValueDisplay.textContent = 'R$ ' + totalGeral.toFixed(2).replace('.',',');
+
+                atribuirBotoes();
+            }
+
+            function atribuirBotoes() {
+                // Lógica Diminuir (-)
+                document.querySelectorAll('.btn-decrease').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const index = carrinhoBruto.findIndex(item => item.id === id);
+                        if (index !== -1) {
+                            carrinhoBruto.splice(index, 1);
+                            salvarERenderizar();
+                        }
+                    });
+                });
+
+                // Lógica Aumentar (+)
+                document.querySelectorAll('.btn-increase').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        // Encontra um exemplo desse item para copiar os dados
+                        const itemExemplo = carrinhoBruto.find(item => item.id === id);
+                        if (itemExemplo) {
+                            carrinhoBruto.push(itemExemplo);
+                            salvarERenderizar();
+                        }
+                    });
+                });
+            }
+
+            const btnFinish = document.querySelector('.btn-finish-order');
+            
+            btnFinish.addEventListener('click', function() {
+                if (carrinhoBruto.length === 0) {
+                    alert("Seu carrinho está vazio!");
+                    return;
+                }
+                
+                // Salva o total calculado para usar na próxima tela (opcional, mas útil)
+                // O carrinho já está no storage, então podemos recalcular lá também.
+                // Apenas redireciona:
+                window.location.href = 'metodopagamento.html';
+            });
+
+            renderizarCarrinho();
+        });
+    </script>
+</body>
+</html>

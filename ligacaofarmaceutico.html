@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Atendimento Farmacêutico</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* --- Variáveis (Mesma identidade) --- */
+       :root { --tech-purple: #2E1A47; --neon-mint: #69FFC2; --pure-white: #FFFFFF; --warning-red: #ff4757; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        
+        body { 
+            background-color: #1a0f2e; /* Um pouco mais escuro para foco no vídeo */
+            color: var(--pure-white); 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+        }
+
+        /* Área Principal do Vídeo (Farmacêutico) */
+        .video-container {
+            flex-grow: 1;
+            position: relative;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Imagem simulando o vídeo do farmacêutico */
+        .pharmacist-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6; /* Começa meio escuro até "conectar" */
+            transition: opacity 1s;
+        }
+
+        /* Overlay de Status (Conectando...) */
+        .status-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+        .status-text { font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px;}
+        .loading-dots { display: inline-block; animation: dot-blink 1.5s infinite; }
+        @keyframes dot-blink { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
+
+        /* Timer da Chamada */
+        .call-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+        }
+        .recording-dot { width: 10px; height: 10px; background-color: var(--warning-red); border-radius: 50%; animation: pulse-red 1s infinite; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        /* Câmera do Usuário (Picture-in-Picture) */
+        .user-pip {
+            position: absolute;
+            bottom: 120px; /* Acima dos controles */
+            right: 20px;
+            width: 120px;
+            height: 160px;
+            background-color: #333;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.2);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .user-pip img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Barra de Controles Inferior */
+        .controls-bar {
+            height: 100px;
+            background-color: rgba(46, 26, 71, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            z-index: 20;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            transition: all 0.2s;
+            background-color: rgba(255,255,255,0.1);
+            color: var(--pure-white);
+        }
+        .control-btn:hover { background-color: rgba(255,255,255,0.2); transform: scale(1.05); }
+        
+        .btn-hangup {
+            width: 70px;
+            height: 70px;
+            background-color: var(--warning-red);
+            font-size: 2.2rem;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+        .btn-hangup:hover { background-color: #ff2e40; transform: scale(1.1); }
+
+    </style>
+</head>
+<body>
+
+    <div class="video-container">
+        
+        <div id="callTimer" class="call-info" style="display: none;">
+            <div class="recording-dot"></div>
+            <span id="timerText">00:00</span>
+            <span style="margin-left: 10px; font-weight: 300; font-size: 0.9rem;">Dr. Ricardo (Farmacêutico)</span>
+        </div>
+
+        <div id="statusOverlay" class="status-overlay">
+            <div class="status-text">Conectando...</div>
+            <div style="font-size: 0.9rem; color: rgba(255,255,255,0.6);">Estabelecendo conexão segura</div>
+        </div>
+
+        <img id="pharmacistVideo" class="pharmacist-video" src="https://img.freepik.com/fotos-gratis/um-trabalhador-medico-masculino-de-tiro-medio-com-area-de-transferencia_23-2148758999.jpg?w=1380" alt="Farmacêutico">
+
+        <div class="user-pip">
+            <img src="https://placehold.co/120x160/333/666?text=Você" alt="Sua Câmera">
+        </div>
+    </div>
+
+    <div class="controls-bar">
+        <button class="control-btn" title="Mutar Microfone" onclick="toggleIcon(this, 'mic', 'mic_off')">
+            <span class="material-icons">mic</span>
+        </button>
+        
+        <button id="btnHangUp" class="control-btn btn-hangup" title="Desligar Chamada">
+            <span class="material-icons">call_end</span>
+        </button>
+        
+        <button class="control-btn" title="Desligar Câmera" onclick="toggleIcon(this, 'videocam', 'videocam_off')">
+            <span class="material-icons">videocam</span>
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verifica Login
+            const nomeSalvo = sessionStorage.getItem('usuarioFarmaFacil');
+            if (!nomeSalvo) { window.location.href = 'login.html'; return; }
+
+            // Elementos
+            const statusOverlay = document.getElementById('statusOverlay');
+            const callTimer = document.getElementById('callTimer');
+            const pharmacistVideo = document.getElementById('pharmacistVideo');
+            const timerText = document.getElementById('timerText');
+            const btnHangUp = document.getElementById('btnHangUp');
+
+            // Simulação de Conexão (2 segundos)
+            setTimeout(() => {
+                statusOverlay.style.display = 'none'; // Esconde "Conectando"
+                callTimer.style.display = 'flex';     // Mostra Timer
+                pharmacistVideo.style.opacity = '1';  // Clareia o vídeo
+                iniciarCronometro();
+            }, 2000);
+
+            // Botão Desligar
+            btnHangUp.addEventListener('click', function() {
+                // Efeito sonoro opcional ou apenas sair
+                window.location.href = 'loja.html';
+            });
+            
+            // Lógica do Cronômetro
+            let seconds = 0;
+            function iniciarCronometro() {
+                setInterval(() => {
+                    seconds++;
+                    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                    const secs = (seconds % 60).toString().padStart(2, '0');
+                    timerText.textContent = `${mins}:${secs}`;
+                }, 1000);
+            }
+        });
+
+        // Função visual para alternar ícones (Mute/Video)
+        function toggleIcon(btn, iconOn, iconOff) {
+            const iconSpan = btn.querySelector('.material-icons');
+            const isOff = iconSpan.textContent === iconOff;
+            
+            if (isOff) {
+                iconSpan.textContent = iconOn;
+                btn.style.backgroundColor = "rgba(255,255,255,0.1)";
+                btn.style.color = "var(--pure-white)";
+            } else {
+                iconSpan.textContent = iconOff;
+                btn.style.backgroundColor = "var(--pure-white)";
+                btn.style.color = "var(--tech-purple)";
+            }
+        }
+    </script>
+
+</body>
+</html>
